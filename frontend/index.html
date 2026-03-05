@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Star Wars: Personas</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    :root{
+      --bg0:#070a12;
+      --bg1:#0b1020;
+      --card:#0f172a;
+      --line:rgba(255,255,255,.10);
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+      --accent:#ffd60a;
+      --accent2:#5eead4;
+      --danger:#ef4444;
+      --blue:#60a5fa;
+      --shadow: 0 10px 25px rgba(0,0,0,.35);
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: Arial, Helvetica, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 20% -10%, rgba(255,214,10,.14), transparent 60%),
+        radial-gradient(900px 500px at 80% 0%, rgba(94,234,212,.10), transparent 55%),
+        radial-gradient(800px 500px at 30% 90%, rgba(96,165,250,.08), transparent 55%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      color:var(--text);
+      min-height:100vh;
+    }
+
+    .stars{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      opacity:.35;
+      background-image:
+        radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,.9) 50%, transparent 51%),
+        radial-gradient(1px 1px at 80% 30%, rgba(255,255,255,.7) 50%, transparent 51%),
+        radial-gradient(1px 1px at 40% 70%, rgba(255,255,255,.8) 50%, transparent 51%),
+        radial-gradient(1px 1px at 60% 85%, rgba(255,255,255,.6) 50%, transparent 51%),
+        radial-gradient(1px 1px at 25% 45%, rgba(255,255,255,.7) 50%, transparent 51%),
+        radial-gradient(1px 1px at 70% 60%, rgba(255,255,255,.8) 50%, transparent 51%),
+        radial-gradient(1px 1px at 90% 80%, rgba(255,255,255,.6) 50%, transparent 51%);
+      background-size: 700px 400px, 900px 500px, 800px 450px, 1000px 650px, 850px 520px, 950px 600px, 1100px 700px;
+      background-repeat: repeat;
+      filter: blur(.2px);
+    }
+
+    .wrap{ max-width: 980px; margin: 0 auto; padding: 18px 16px 24px; position:relative; }
+
+    header{
+      background: linear-gradient(180deg, rgba(15,23,42,.92), rgba(15,23,42,.78));
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .titleRow{ display:flex; align-items:center; justify-content:space-between; gap: 12px; flex-wrap:wrap; }
+    h1{
+      margin:0;
+      font-size: 18px;
+      letter-spacing: .6px;
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      font-size: 12px;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.03);
+    }
+    .dot{
+      width: 8px; height: 8px; border-radius: 999px;
+      background: radial-gradient(circle at 30% 30%, #fff, var(--accent));
+      box-shadow: 0 0 12px rgba(255,214,10,.45);
+    }
+    .sub{ margin: 8px 0 0; font-size: 13px; color: var(--muted); }
+
+    .card{
+      background: linear-gradient(180deg, rgba(15,23,42,.92), rgba(15,23,42,.78));
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .row{ display:flex; gap: 10px; flex-wrap: wrap; align-items:center; }
+    .spacer{ flex:1; }
+
+    input[type="text"]{
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 10px;
+      font-size: 14px;
+      outline: none;
+      min-width: 240px;
+      flex: 1;
+      background: rgba(0,0,0,.25);
+      color: var(--text);
+    }
+    input[type="text"]::placeholder{ color: rgba(229,231,235,.55); }
+
+    button{
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.25);
+      color: var(--text);
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      min-width: 130px;
+      transition: transform .08s ease, border-color .15s ease, background .15s ease, box-shadow .15s ease;
+    }
+    button:hover:not(:disabled){
+      transform: translateY(-1px);
+      border-color: rgba(255,214,10,.55);
+      box-shadow: 0 0 0 3px rgba(255,214,10,.12);
+    }
+    button:disabled{ opacity: .45; cursor:not-allowed; }
+
+    button.primary{
+      background: linear-gradient(180deg, rgba(255,214,10,.95), rgba(255,195,0,.92));
+      color: #10131f;
+      border-color: rgba(255,214,10,.55);
+      font-weight: 800;
+    }
+    button.primary:hover:not(:disabled){
+      box-shadow: 0 0 0 3px rgba(255,214,10,.18), 0 8px 18px rgba(255,214,10,.08);
+    }
+    button.secondary{
+      background: rgba(0,0,0,.18);
+    }
+
+    .hint{
+      margin: 10px 0 0;
+      font-size: 12px;
+      color: rgba(156,163,175,.95);
+      word-break: break-word;
+    }
+    .hint b{ color: rgba(229,231,235,.95); }
+
+    .msg{
+      border-left: 4px solid var(--blue);
+      background: linear-gradient(180deg, rgba(15,23,42,.92), rgba(15,23,42,.78));
+    }
+    .msg strong{ color: var(--blue); }
+
+    .error{
+      border-left: 4px solid var(--danger);
+      background: linear-gradient(180deg, rgba(15,23,42,.92), rgba(15,23,42,.78));
+    }
+    .error h3{ margin:0 0 6px; font-size: 15px; color: var(--danger); }
+    .error p{ margin:0; color: rgba(229,231,235,.9); }
+
+    .grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .list{
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(0,0,0,.12);
+    }
+    .list-header{
+      padding: 10px 12px;
+      background: rgba(255,255,255,.03);
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      font-size: 13px;
+      color: rgba(229,231,235,.9);
+      display:flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .list-header span{ color: rgba(156,163,175,.95); }
+
+    .list-body{ max-height: 430px; overflow:auto; }
+    .list-body::-webkit-scrollbar{ width: 10px; }
+    .list-body::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.10); border-radius: 999px; }
+    .list-body::-webkit-scrollbar-track{ background: rgba(0,0,0,.10); }
+
+    .person{
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      cursor: pointer;
+      display:flex;
+      gap: 10px;
+      align-items: baseline;
+      transition: background .12s ease;
+    }
+    .person:hover{ background: rgba(255,255,255,.04); }
+    .person.active{
+      background: rgba(255,214,10,.08);
+      outline: 1px solid rgba(255,214,10,.25);
+    }
+
+    .pill{
+      font-size: 12px;
+      color: #10131f;
+      background: linear-gradient(180deg, rgba(255,214,10,.95), rgba(255,195,0,.92));
+      border-radius: 999px;
+      padding: 2px 8px;
+      line-height: 1.6;
+      white-space: nowrap;
+      font-weight: 800;
+    }
+    .pname{ font-size: 14px; font-weight: 800; }
+    .pmeta{ font-size: 12px; color: rgba(156,163,175,.95); }
+
+    h2{ margin:0 0 10px; font-size: 16px; font-weight: 900; color: rgba(255,214,10,.95); }
+
+    .kv{ display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .item{
+      border: 1px solid rgba(255,255,255,.10);
+      padding: 10px;
+      border-radius: 12px;
+      background: rgba(0,0,0,.14);
+    }
+    .k{
+      font-size: 11px;
+      color: rgba(156,163,175,.95);
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      margin-bottom: 4px;
+    }
+    .v{
+      font-size: 14px;
+      font-weight: 800;
+      color: rgba(229,231,235,.95);
+      word-break: break-word;
+    }
+
+    ul{ margin: 10px 0 0; padding-left: 18px; }
+    li{ margin: 6px 0; font-size: 14px; color: rgba(229,231,235,.92); word-break: break-word; }
+
+    .muted{ color: rgba(156,163,175,.95); }
+
+    @media (max-width: 900px){
+      .grid{ grid-template-columns: 1fr; }
+      .kv{ grid-template-columns: 1fr; }
+      .list-body{ max-height: 320px; }
+      button{ min-width: 115px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stars"></div>
+  <div id="app">
+    <div class="wrap">
+      <header>
+        <div class="titleRow">
+          <h1>Star Wars: Personas</h1>
+        </div>
+        <p class="sub">Primero lista, luego eliges una persona para ver detalle.</p>
+      </header>
+
+      <div class="card">
+        <div class="row">
+          <button class="primary" @click="loadPeople()" :disabled="isLoadingList">Cargar lista</button>
+          <button class="secondary" @click="prevPage" :disabled="!previous || isLoadingList">Anterior</button>
+          <button class="secondary" @click="nextPage" :disabled="!next || isLoadingList">Siguiente</button>
+          <div class="spacer"></div>
+          <input type="text" v-model="filterText" placeholder="Filtrar por nombre (ej: luke)" />
+          <button class="secondary" @click="clearSelection" :disabled="!selectedPersonUrl && !character">Limpiar</button>
+        </div>
+      </div>
+
+      <div v-if="isLoadingList || isLoadingDetail" class="card msg">
+        <strong>Cargando...</strong>
+        {{ isLoadingList ? "Obteniendo lista de personajes." : "Obteniendo detalle del personaje." }}
+      </div>
+
+      <div v-else-if="errorMessage" class="card error">
+        <h3>Error</h3>
+        <p>{{ errorMessage }}</p>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <div class="list">
+            <div class="list-header">
+              <div><b>Listado</b> <span>(total: {{ count }})</span></div>
+              <div><span>Página:</span> {{ currentPage }}</div>
+            </div>
+
+            <div class="list-body">
+              <div v-if="!people.length && !isLoadingList" style="padding:12px;" class="muted">
+                Dale a <b style="color:rgba(255,214,10,.95)">Cargar lista</b> para traer los personajes.
+              </div>
+
+              <div
+                v-for="p in filteredPeople"
+                :key="p.url"
+                class="person"
+                :class="{ active: selectedPersonUrl === p.url }"
+                @click="selectPerson(p)"
+              >
+                <span class="pill">#{{ extractIdFromUrl(p.url) }}</span>
+                <div>
+                  <div class="pname">{{ p.name }}</div>
+                  <div class="pmeta">Altura: {{ p.height }} cm · Peso: {{ p.mass }} kg · Género: {{ p.gender }}</div>
+                </div>
+              </div>
+
+              <div v-if="people.length && !filteredPeople.length" style="padding:12px;" class="muted">
+                No hay resultados con ese filtro.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div v-if="character">
+            <h2>{{ character.name }}</h2>
+
+            <div class="kv">
+              <div class="item"><div class="k">Altura</div><div class="v">{{ character.height }} cm</div></div>
+              <div class="item"><div class="k">Peso</div><div class="v">{{ character.mass }} kg</div></div>
+              <div class="item"><div class="k">Cabello</div><div class="v">{{ character.hair_color }}</div></div>
+              <div class="item"><div class="k">Piel</div><div class="v">{{ character.skin_color }}</div></div>
+              <div class="item"><div class="k">Ojos</div><div class="v">{{ character.eye_color }}</div></div>
+              <div class="item"><div class="k">Nacimiento</div><div class="v">{{ character.birth_year }}</div></div>
+              <div class="item"><div class="k">Género</div><div class="v">{{ character.gender }}</div></div>
+              <div class="item"><div class="k">URL</div><div class="v">{{ character.url }}</div></div>
+            </div>
+
+            <div v-if="Array.isArray(character.films) && character.films.length" style="margin-top:12px;">
+              <div class="k" style="margin-bottom:6px;">Películas</div>
+              <ul>
+                <li v-for="(film, index) in character.films" :key="index">{{ film }}</li>
+              </ul>
+            </div>
+          </div>
+
+          <div v-else class="muted">
+            Selecciona un personaje de la lista para ver su detalle.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const { createApp, ref, computed, onMounted } = Vue;
+
+    createApp({
+      setup() {
+        const people = ref([]);
+        const count = ref(0);
+        const next = ref(null);
+        const previous = ref(null);
+        const currentPage = ref(1);
+
+        const filterText = ref("");
+        const selectedPersonUrl = ref("");
+        const character = ref(null);
+
+        const isLoadingList = ref(false);
+        const isLoadingDetail = ref(false);
+        const errorMessage = ref("");
+
+        const API_LIST = "http://localhost:3001/api/people/";
+        const API_DETAIL_BASE = "http://localhost:3001/api/people/";
+
+        const filteredPeople = computed(() => {
+          const t = (filterText.value || "").trim().toLowerCase();
+          const arr = Array.isArray(people.value) ? people.value : [];
+          if (!t) return arr;
+          return arr.filter(p => ((p && p.name) ? p.name : "").toLowerCase().includes(t));
+        });
+
+        const extractIdFromUrl = (url) => {
+          const m = String(url || "").match(/\/people\/(\d+)\/?$/);
+          return m ? m[1] : "?";
+        };
+
+        const localListUrlFromSwapiUrl = (swapiUrl) => {
+          if (!swapiUrl) return null;
+          try {
+            const u = new URL(swapiUrl);
+            const page = u.searchParams.get("page");
+            return page ? `${API_LIST}?page=${page}` : API_LIST;
+          } catch {
+            return null;
+          }
+        };
+
+        const loadPeople = async (pageUrl = API_LIST) => {
+          errorMessage.value = "";
+          isLoadingList.value = true;
+
+          try {
+            const resp = await fetch(pageUrl);
+            if (!resp.ok) {
+              const text = await resp.text();
+              throw new Error(text || `HTTP ${resp.status}`);
+            }
+            const data = await resp.json();
+
+            if (data && data.error) {
+              errorMessage.value = data.message || "Error al cargar el listado.";
+              people.value = [];
+              count.value = 0;
+              next.value = null;
+              previous.value = null;
+              return;
+            }
+
+            count.value = Number(data.count) || 0;
+            people.value = Array.isArray(data.results) ? data.results : [];
+            next.value = localListUrlFromSwapiUrl(data.next);
+            previous.value = localListUrlFromSwapiUrl(data.previous);
+
+            const urlObj = new URL(pageUrl, window.location.origin);
+            const page = urlObj.searchParams.get("page");
+            currentPage.value = page ? Number(page) : 1;
+          } catch (e) {
+            errorMessage.value = "No se pudo cargar la lista. Verifica que el backend responda en /api/people/.";
+            console.error(e);
+          } finally {
+            isLoadingList.value = false;
+          }
+        };
+
+        const fetchDetailById = async (id) => {
+          errorMessage.value = "";
+          isLoadingDetail.value = true;
+          character.value = null;
+
+          try {
+            const resp = await fetch(`${API_DETAIL_BASE}${id}`);
+            if (!resp.ok) {
+              const text = await resp.text();
+              throw new Error(text || `HTTP ${resp.status}`);
+            }
+            const data = await resp.json();
+
+            if (data && data.error) {
+              errorMessage.value = data.message || "No se pudo cargar el detalle.";
+              return;
+            }
+
+            character.value = data.data || null;
+          } catch (e) {
+            errorMessage.value = "No se pudo cargar el detalle del personaje.";
+            console.error(e);
+          } finally {
+            isLoadingDetail.value = false;
+          }
+        };
+
+        const selectPerson = (p) => {
+          selectedPersonUrl.value = p && p.url ? p.url : "";
+          const id = extractIdFromUrl(selectedPersonUrl.value);
+          if (id === "?") {
+            errorMessage.value = "No se pudo obtener el ID desde la URL del personaje.";
+            return;
+          }
+          fetchDetailById(id);
+        };
+
+        const nextPage = () => {
+          if (!next.value) return;
+          clearSelection();
+          loadPeople(next.value);
+        };
+
+        const prevPage = () => {
+          if (!previous.value) return;
+          clearSelection();
+          loadPeople(previous.value);
+        };
+
+        const clearSelection = () => {
+          selectedPersonUrl.value = "";
+          character.value = null;
+          errorMessage.value = "";
+        };
+
+        onMounted(() => {
+          loadPeople();
+        });
+
+        return {
+          people,
+          count,
+          next,
+          previous,
+          currentPage,
+          filterText,
+          selectedPersonUrl,
+          character,
+          isLoadingList,
+          isLoadingDetail,
+          errorMessage,
+          filteredPeople,
+          loadPeople,
+          nextPage,
+          prevPage,
+          selectPerson,
+          clearSelection,
+          extractIdFromUrl
+        };
+      }
+    }).mount("#app");
+  </script>
+</body>
+</html>
